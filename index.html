@@ -26,6 +26,11 @@
         button:hover {
             background-color: #45a049;
         }
+        #prediction-result {
+            margin-top: 20px;
+            font-size: 18px;
+            color: #333;
+        }
     </style>
 </head>
 <body>
@@ -33,11 +38,14 @@
     <h1>Sports Season Predictor</h1>
     <p>Select a league to predict the season outcome:</p>
 
-    <button onclick="alert('NFL prediction coming soon!')">NFL</button>
-    <button onclick="alert('NBA prediction coming soon!')">NBA</button>
-    <button onclick="alert('NHL prediction coming soon!')">NHL</button>
-    <button onclick="alert('MLB prediction coming soon!')">MLB</button>
+    <button onclick="predictNFL()">NFL</button>
+    <button onclick="predictNBA()">NBA</button>
+    <button onclick="predictNHL()">NHL</button>
+    <button onclick="predictMLB()">MLB</button>
 
+    <div id="prediction-result"></div>
+
+    <script src="js/main.js"></script>
 </body>
 </html>
 
