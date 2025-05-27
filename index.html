@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF-8" />
     <title>Sports Predictor</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <style>
         * {
             margin: 0;
@@ -20,6 +20,7 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
+            padding: 20px;
         }
 
         h1 {
@@ -54,6 +55,18 @@
             transform: scale(1.05);
         }
 
+        #simulation-results {
+            margin-top: 30px;
+            width: 90%;
+            max-width: 800px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            color: #fff;
+            font-size: 1.1rem;
+        }
+
         footer {
             margin-top: 40px;
             color: rgba(255, 255, 255, 0.6);
@@ -64,13 +77,18 @@
 <body>
     <h1>Sports Season Predictor</h1>
     <div class="button-container">
-        <button class="league-button" onclick="alert('NBA Predictor Coming Soon')">Predict NBA</button>
-        <button class="league-button" onclick="alert('NFL Predictor Coming Soon')">Predict NFL</button>
-        <button class="league-button" onclick="alert('NHL Predictor Coming Soon')">Predict NHL</button>
-        <button class="league-button" onclick="alert('MLB Predictor Coming Soon')">Predict MLB</button>
+        <button id="nba-btn" class="league-button">Predict NBA</button>
+        <button id="nfl-btn" class="league-button">Predict NFL</button>
+        <button id="nhl-btn" class="league-button">Predict NHL</button>
+        <button id="mlb-btn" class="league-button">Predict MLB</button>
     </div>
+
+    <div id="simulation-results"></div>
+
     <footer>
         &copy; 2025 FlockNation
     </footer>
+
+    <script src="script.js"></script>
 </body>
 </html>
