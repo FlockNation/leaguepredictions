@@ -16,7 +16,7 @@ def load_data(file):
     df = pd.read_csv(file)
     return df
 
-def create_matchups(df):
+def create_matchups(df, league):
     teams = df['Team'].values
     X = []
     y = []
@@ -27,8 +27,10 @@ def create_matchups(df):
             team_a = df.iloc[i]
             team_b = df.iloc[j]
             features = []
-            for stat in ['Wins', 'Losses']:
-                features.append(team_a[stat] - team_b[stat])
+            features.append(team_a['Wins'] - team_b['Wins'])
+            features.append(team_a['Losses'] - team_b['Losses'])
+            if league == 'nhl' and 'OTL' in df.columns:
+                features.append(team_a['OTL'] - team_b['OTL'])
             X.append(features)
             y.append(1 if team_a['Wins'] > team_b['Wins'] else 0)
     return np.array(X), np.array(y)
@@ -36,19 +38,14 @@ def create_matchups(df):
 def train_and_save_model(league):
     print(f"Training model for {league.upper()}...")
     df = load_data(LEAGUE_FILES[league])
-    X, y = create_matchups(df)
-
+    X, y = create_matchups(df, league)
     scaler = StandardScaler()
     X_scaled = scaler.fit_transform(X)
-
     X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, test_size=0.2, random_state=42)
-
     model = LogisticRegression()
     model.fit(X_train, y_train)
-
     acc = model.score(X_test, y_test)
     print(f"{league.upper()} model accuracy: {acc:.2f}")
-
     joblib.dump(model, f"{league}_model.joblib")
     joblib.dump(scaler, f"{league}_scaler.joblib")
     print(f"Saved {league} model and scaler.\n")
