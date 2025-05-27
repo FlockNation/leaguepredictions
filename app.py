@@ -1,27 +1,15 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 import pandas as pd
 import joblib
 import random
-import numpy as np
+import os
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='.', static_url_path='')
 
 def predict_game(team_a_stats, team_b_stats, league):
     model = joblib.load(f"{league}_model.joblib")
     scaler = joblib.load(f"{league}_scaler.joblib")
-
-    if league == 'nhl' and 'OTL' in team_a_stats and 'OTL' in team_b_stats:
-        features = np.array([
-            team_a_stats['Wins'] - team_b_stats['Wins'],
-            team_a_stats['Losses'] - team_b_stats['Losses'],
-            team_a_stats['OTL'] - team_b_stats['OTL']
-        ]).reshape(1, -1)
-    else:
-        features = np.array([
-            team_a_stats['Wins'] - team_b_stats['Wins'],
-            team_a_stats['Losses'] - team_b_stats['Losses']
-        ]).reshape(1, -1)
-
+    features = [[team_a_stats['Wins'] - team_b_stats['Wins'], team_a_stats['Losses'] - team_b_stats['Losses']]]
     features_scaled = scaler.transform(features)
     win_prob = model.predict_proba(features_scaled)[0][1]
     upset_chance = 0.1
@@ -35,21 +23,24 @@ def simulate_season(league):
     standings = {team: 0 for team in teams}
     team_stats = {}
     for _, row in df.iterrows():
-        stats = {'Wins': row['Wins'], 'Losses': row['Losses']}
-        if league == 'nhl' and 'OTL' in row:
-            stats['OTL'] = row['OTL']
-        team_stats[row['Team']] = stats
+        team_stats[row['Team']] = {'Wins': row['Wins'], 'Losses': row['Losses']}
     for i in range(len(teams)):
         for j in range(i + 1, len(teams)):
             team_a = teams[i]
             team_b = teams[j]
-            winner_is_a = predict_game(team_stats[team_a], team_stats[team_b], league)
+            team_a_stats = team_stats[team_a]
+            team_b_stats = team_stats[team_b]
+            winner_is_a = predict_game(team_a_stats, team_b_stats, league)
             if winner_is_a:
                 standings[team_a] += 1
             else:
                 standings[team_b] += 1
     sorted_standings = sorted(standings.items(), key=lambda x: x[1], reverse=True)
     return sorted_standings
+
+@app.route('/')
+def serve_index():
+    return send_from_directory('.', 'index.html')
 
 @app.route('/simulate_season', methods=['GET'])
 def api_simulate_season():
