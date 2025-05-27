@@ -1,40 +1,58 @@
 import pandas as pd
 import numpy as np
 from sklearn.linear_model import LogisticRegression
+from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
-from joblib import dump
+import joblib
 
-def create_matchup_data(df):
-    matchups = []
+LEAGUE_FILES = {
+    'nba': 'NBA_2024_25.csv',
+    'nfl': 'NFL_2024.csv',
+    'nhl': 'NHL_2024_25.csv',
+    'mlb': 'MLB_2024.csv',
+}
+
+def load_data(file):
+    df = pd.read_csv(file)
+    return df
+
+def create_matchups(df):
     teams = df['Team'].values
+    X = []
+    y = []
     for i in range(len(teams)):
         for j in range(len(teams)):
-            if i != j:
-                team_a = df.iloc[i]
-                team_b = df.iloc[j]
-                diff = team_a.drop('Team') - team_b.drop('Team')
-                matchups.append({
-                    **diff.to_dict(),
-                    'Winner': 1
-                })
-    return pd.DataFrame(matchups)
+            if i == j:
+                continue
+            team_a = df.iloc[i]
+            team_b = df.iloc[j]
+            features = []
+            for stat in ['Wins', 'Losses']:
+                features.append(team_a[stat] - team_b[stat])
+            X.append(features)
+            y.append(1 if team_a['Wins'] > team_b['Wins'] else 0)
+    return np.array(X), np.array(y)
 
-def train_model(league_name, csv_path):
-    df = pd.read_csv(csv_path)
-    df.fillna(0, inplace=True)
-    numeric_cols = df.select_dtypes(include=[np.number]).columns
-    df[numeric_cols] = (df[numeric_cols] - df[numeric_cols].mean()) / df[numeric_cols].std()
-    matchups = create_matchup_data(df)
-    X = matchups.drop(columns=['Winner'])
-    y = matchups['Winner']
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+def train_and_save_model(league):
+    print(f"Training model for {league.upper()}...")
+    df = load_data(LEAGUE_FILES[league])
+    X, y = create_matchups(df)
+
+    scaler = StandardScaler()
+    X_scaled = scaler.fit_transform(X)
+
+    X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, test_size=0.2, random_state=42)
+
     model = LogisticRegression()
     model.fit(X_train, y_train)
-    accuracy = model.score(X_test, y_test)
-    print(f"{league_name} model accuracy: {accuracy:.2f}")
-    dump(model, f"{league_name.lower()}_model.joblib")
 
-train_model("NBA", "nba_2024.csv")
-train_model("NFL", "nfl_2024.csv")
-train_model("NHL", "nhl_2024.csv")
-train_model("MLB", "mlb_2024.csv")
+    acc = model.score(X_test, y_test)
+    print(f"{league.upper()} model accuracy: {acc:.2f}")
+
+    joblib.dump(model, f"{league}_model.joblib")
+    joblib.dump(scaler, f"{league}_scaler.joblib")
+    print(f"Saved {league} model and scaler.\n")
+
+if __name__ == "__main__":
+    for league in LEAGUE_FILES:
+        train_and_save_model(league)
