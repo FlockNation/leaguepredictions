@@ -47,8 +47,12 @@ def api_simulate_season():
     league = request.args.get('league')
     if league not in ['nba', 'nfl', 'nhl', 'mlb']:
         return jsonify({"error": "Invalid league"}), 400
-    standings = simulate_season(league)
-    return jsonify({"standings": standings})
+    try:
+        standings = simulate_season(league)
+        return jsonify({"standings": standings})
+    except Exception as e:
+        print(f"Error simulating season for {league}: {e}")
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
     app.run(debug=True)
