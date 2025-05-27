@@ -2,13 +2,26 @@ from flask import Flask, request, jsonify
 import pandas as pd
 import joblib
 import random
+import numpy as np
 
 app = Flask(__name__)
 
 def predict_game(team_a_stats, team_b_stats, league):
     model = joblib.load(f"{league}_model.joblib")
     scaler = joblib.load(f"{league}_scaler.joblib")
-    features = [[team_a_stats['Wins'] - team_b_stats['Wins'], team_a_stats['Losses'] - team_b_stats['Losses']]]
+
+    if league == 'nhl' and 'OTL' in team_a_stats and 'OTL' in team_b_stats:
+        features = np.array([
+            team_a_stats['Wins'] - team_b_stats['Wins'],
+            team_a_stats['Losses'] - team_b_stats['Losses'],
+            team_a_stats['OTL'] - team_b_stats['OTL']
+        ]).reshape(1, -1)
+    else:
+        features = np.array([
+            team_a_stats['Wins'] - team_b_stats['Wins'],
+            team_a_stats['Losses'] - team_b_stats['Losses']
+        ]).reshape(1, -1)
+
     features_scaled = scaler.transform(features)
     win_prob = model.predict_proba(features_scaled)[0][1]
     upset_chance = 0.1
@@ -22,14 +35,15 @@ def simulate_season(league):
     standings = {team: 0 for team in teams}
     team_stats = {}
     for _, row in df.iterrows():
-        team_stats[row['Team']] = {'Wins': row['Wins'], 'Losses': row['Losses']}
+        stats = {'Wins': row['Wins'], 'Losses': row['Losses']}
+        if league == 'nhl' and 'OTL' in row:
+            stats['OTL'] = row['OTL']
+        team_stats[row['Team']] = stats
     for i in range(len(teams)):
         for j in range(i + 1, len(teams)):
             team_a = teams[i]
             team_b = teams[j]
-            team_a_stats = team_stats[team_a]
-            team_b_stats = team_stats[team_b]
-            winner_is_a = predict_game(team_a_stats, team_b_stats, league)
+            winner_is_a = predict_game(team_stats[team_a], team_stats[team_b], league)
             if winner_is_a:
                 standings[team_a] += 1
             else:
