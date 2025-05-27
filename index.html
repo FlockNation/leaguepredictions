@@ -2,50 +2,75 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Sports Season Predictor</title>
+    <title>Sports Predictor</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
         body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            background-color: #f0f2f5;
-            padding: 50px;
+            background: linear-gradient(to bottom right, #8b0000, #ff4444);
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
         }
+
         h1 {
-            color: #333;
+            font-size: 3rem;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px #000;
         }
-        button {
-            margin: 10px;
-            padding: 15px 30px;
-            font-size: 16px;
-            border-radius: 5px;
+
+        .button-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            width: 90%;
+            max-width: 800px;
+            padding: 20px;
+        }
+
+        .league-button {
+            padding: 20px;
+            font-size: 1.2rem;
+            background-color: #b30000;
             border: none;
-            background-color: #4CAF50;
+            border-radius: 12px;
             color: white;
             cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            transition: background-color 0.3s, transform 0.2s;
         }
-        button:hover {
-            background-color: #45a049;
+
+        .league-button:hover {
+            background-color: #ff1a1a;
+            transform: scale(1.05);
         }
-        #prediction-result {
-            margin-top: 20px;
-            font-size: 18px;
-            color: #333;
+
+        footer {
+            margin-top: 40px;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.9rem;
         }
     </style>
 </head>
 <body>
-
     <h1>Sports Season Predictor</h1>
-    <p>Select a league to predict the season outcome:</p>
-
-    <button onclick="predictNFL()">NFL</button>
-    <button onclick="predictNBA()">NBA</button>
-    <button onclick="predictNHL()">NHL</button>
-    <button onclick="predictMLB()">MLB</button>
-
-    <div id="prediction-result"></div>
-
-    <script src="js/main.js"></script>
+    <div class="button-container">
+        <button class="league-button" onclick="alert('NBA Predictor Coming Soon')">Predict NBA</button>
+        <button class="league-button" onclick="alert('NFL Predictor Coming Soon')">Predict NFL</button>
+        <button class="league-button" onclick="alert('NHL Predictor Coming Soon')">Predict NHL</button>
+        <button class="league-button" onclick="alert('MLB Predictor Coming Soon')">Predict MLB</button>
+    </div>
+    <footer>
+        &copy; 2025 FlockNation
+    </footer>
 </body>
 </html>
-
