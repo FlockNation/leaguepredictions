@@ -27,18 +27,24 @@ def predict_game(team_a_stats, team_b_stats, league):
 def simulate_season(league):
     if league not in LEAGUE_GAMES:
         raise ValueError("Unsupported league.")
+        
     csv_file = f"{league.upper()}_2024_25.csv" if league in ['nba', 'nhl'] else f"{league.upper()}_2024.csv"
     df = pd.read_csv(csv_file)
+    
     teams = df['Team'].tolist()
     team_stats = {row['Team']: {'Wins': row['Wins'], 'Losses': row['Losses']} for _, row in df.iterrows()}
     standings = {team: 0 for team in teams}
+    
     games_per_team = LEAGUE_GAMES[league]
-    matchups = []
     total_games = (games_per_team * len(teams)) // 2
+    
+    matchups = set()
     while len(matchups) < total_games:
         team_a, team_b = random.sample(teams, 2)
-        if (team_a, team_b) not in matchups and (team_b, team_a) not in matchups:
-            matchups.append((team_a, team_b))
+        matchup = tuple(sorted((team_a, team_b)))
+        if matchup not in matchups:
+            matchups.add(matchup)
+    
     for team_a, team_b in matchups:
         team_a_stats = team_stats[team_a]
         team_b_stats = team_stats[team_b]
@@ -46,7 +52,13 @@ def simulate_season(league):
             standings[team_a] += 1
         else:
             standings[team_b] += 1
-    sorted_standings = sorted(standings.items(), key=lambda x: x[1], reverse=True)
+
+    results = []
+    for team, wins in standings.items():
+        losses = LEAGUE_GAMES[league] - wins
+        results.append((team, wins, losses))
+        
+    sorted_standings = sorted(results, key=lambda x: x[1], reverse=True)
     return sorted_standings
 
 @app.route('/')
