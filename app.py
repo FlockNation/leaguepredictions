@@ -6,35 +6,46 @@ import os
 
 app = Flask(__name__, static_folder='.', static_url_path='')
 
+LEAGUE_GAMES = {
+    'nba': 82,
+    'nfl': 17,
+    'nhl': 82,
+    'mlb': 162
+}
+
 def predict_game(team_a_stats, team_b_stats, league):
     model = joblib.load(f"{league}_model.joblib")
     scaler = joblib.load(f"{league}_scaler.joblib")
-    features = [[team_a_stats['Wins'] - team_b_stats['Wins'], team_a_stats['Losses'] - team_b_stats['Losses']]]
+    features = [[team_a_stats['Wins'] - team_b_stats['Wins'],
+                 team_a_stats['Losses'] - team_b_stats['Losses']]]
     features_scaled = scaler.transform(features)
     win_prob = model.predict_proba(features_scaled)[0][1]
-    upset_chance = 0.1
-    adjusted_prob = win_prob * (1 - upset_chance) + (random.random() * upset_chance)
-    return adjusted_prob > 0.5
+    upset_factor = random.uniform(-0.15, 0.15)
+    adjusted_prob = min(max(win_prob + upset_factor, 0), 1)
+    return random.random() < adjusted_prob
 
 def simulate_season(league):
+    if league not in LEAGUE_GAMES:
+        raise ValueError("Unsupported league.")
     csv_file = f"{league.upper()}_2024_25.csv" if league in ['nba', 'nhl'] else f"{league.upper()}_2024.csv"
     df = pd.read_csv(csv_file)
     teams = df['Team'].tolist()
+    team_stats = {row['Team']: {'Wins': row['Wins'], 'Losses': row['Losses']} for _, row in df.iterrows()}
     standings = {team: 0 for team in teams}
-    team_stats = {}
-    for _, row in df.iterrows():
-        team_stats[row['Team']] = {'Wins': row['Wins'], 'Losses': row['Losses']}
-    for i in range(len(teams)):
-        for j in range(i + 1, len(teams)):
-            team_a = teams[i]
-            team_b = teams[j]
-            team_a_stats = team_stats[team_a]
-            team_b_stats = team_stats[team_b]
-            winner_is_a = predict_game(team_a_stats, team_b_stats, league)
-            if winner_is_a:
-                standings[team_a] += 1
-            else:
-                standings[team_b] += 1
+    games_per_team = LEAGUE_GAMES[league]
+    matchups = []
+    total_games = (games_per_team * len(teams)) // 2
+    while len(matchups) < total_games:
+        team_a, team_b = random.sample(teams, 2)
+        if (team_a, team_b) not in matchups and (team_b, team_a) not in matchups:
+            matchups.append((team_a, team_b))
+    for team_a, team_b in matchups:
+        team_a_stats = team_stats[team_a]
+        team_b_stats = team_stats[team_b]
+        if predict_game(team_a_stats, team_b_stats, league):
+            standings[team_a] += 1
+        else:
+            standings[team_b] += 1
     sorted_standings = sorted(standings.items(), key=lambda x: x[1], reverse=True)
     return sorted_standings
 
@@ -45,7 +56,7 @@ def serve_index():
 @app.route('/simulate_season', methods=['GET'])
 def api_simulate_season():
     league = request.args.get('league')
-    if league not in ['nba', 'nfl', 'nhl', 'mlb']:
+    if league not in LEAGUE_GAMES:
         return jsonify({"error": "Invalid league"}), 400
     try:
         standings = simulate_season(league)
