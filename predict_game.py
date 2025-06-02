@@ -21,7 +21,6 @@ def predict_game(team_a_stats, team_b_stats, league):
     features_scaled = scaler.transform(features)
     win_prob = model.predict_proba(features_scaled)[0][1]
 
-    upset_chance = 0.1
-    adjusted_prob = win_prob * (1 - upset_chance) + (random.random() * upset_chance)
+    adjusted_prob = np.clip(win_prob + random.uniform(-0.15, 0.15), 0, 1)
 
-    return adjusted_prob > 0.5
+    return random.random() < adjusted_prob
