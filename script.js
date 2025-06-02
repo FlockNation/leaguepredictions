@@ -9,8 +9,8 @@ function callPrediction(league) {
 
       const standings = data.standings;
       let output = `<h2>${league.toUpperCase()} Season Simulation</h2><ol>`;
-      standings.forEach(([team, wins], index) => {
-        output += `<li><strong>${team}</strong>: ${wins} wins</li>`;
+      standings.forEach(([team, wins, losses]) => {
+        output += `<li><strong>${team}</strong>: ${wins}-${losses}</li>`;
       });
       output += '</ol>';
 
